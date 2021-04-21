@@ -35,3 +35,4 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 //!-handler
+// http://localhost:8000/my-url?param1=val1&super=hero

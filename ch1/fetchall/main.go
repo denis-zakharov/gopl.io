@@ -23,7 +23,7 @@ func main() {
 		go fetch(url, ch) // start a goroutine
 	}
 	for range os.Args[1:] {
-		fmt.Println(<-ch) // receive from channel ch
+		fmt.Println(<-ch) // receive from channel ch FIFO
 	}
 	fmt.Printf("%.2fs elapsed\n", time.Since(start).Seconds())
 }
@@ -46,4 +46,12 @@ func fetch(url string, ch chan<- string) {
 	ch <- fmt.Sprintf("%.2fs  %7d  %s", secs, nbytes, url)
 }
 
-//!-
+/*
+main.exe http://gopl.io https://ya.ru https://golang.org https://godoc.org https://google.com
+0.51s    10187  https://golang.org
+0.53s    59976  https://ya.ru
+0.67s    15976  https://google.com
+1.36s    10032  https://godoc.org
+2.04s     4154  http://gopl.io
+2.04s elapsed
+*/
