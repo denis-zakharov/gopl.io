@@ -17,4 +17,9 @@ func main() {
 	fmt.Printf("Union x|y == %08b\t{0, 1, 2, 5}\n", x|y)
 	fmt.Printf("Symmetric diff x^y == %08b\t{0, 2, 5}\n", x^y)
 	fmt.Printf("Difference %08b\t{0, 5}\n", x&^y)
+
+	fmt.Printf("\nRight shift of _signed_ numbers populates higher bits with copies of a sign bit.\n")
+	var signed int8 = -127
+	fmt.Printf("%08b\n", uint8(signed))
+	fmt.Printf("%08b\n", uint8(signed>>2))
 }
