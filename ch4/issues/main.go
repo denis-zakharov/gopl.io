@@ -8,24 +8,74 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
-	"os"
+	"time"
 
 	"gopl.io/ch4/github"
 )
 
 //!+
 func main() {
-	result, err := github.SearchIssues(os.Args[1:])
+	var dateSorted = flag.Bool("s", false, "Sort issues by creation date.")
+	flag.Parse()
+	query := flag.Args()
+	var now, dayAgo, weekAgo, monthAgo, yearAgo time.Time
+	if *dateSorted {
+		query = append(query, "&sort=created")
+		now = time.Now()
+		dayAgo = now.AddDate(0, 0, -1)
+		weekAgo = now.AddDate(0, 0, -7)
+		monthAgo = now.AddDate(0, -1, 0)
+		yearAgo = now.AddDate(-1, 0, 0)
+	}
+	result, err := github.SearchIssues(query)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("%d issues:\n", result.TotalCount)
+	timeCategories := make(map[time.Time]bool)
 	for _, item := range result.Items {
+		if *dateSorted {
+			switch {
+			case item.CreatedAt.Before(yearAgo):
+				_, ok := timeCategories[yearAgo]
+				if !ok {
+					timeCategories[yearAgo] = true
+					fmt.Println("### Older than a year")
+				}
+
+			case item.CreatedAt.Before(monthAgo):
+				_, ok := timeCategories[monthAgo]
+				if !ok {
+					timeCategories[monthAgo] = true
+					fmt.Println("### Older than a month")
+				}
+			case item.CreatedAt.Before(weekAgo):
+				_, ok := timeCategories[weekAgo]
+				if !ok {
+					timeCategories[weekAgo] = true
+					fmt.Println("### Older than a week")
+				}
+			case item.CreatedAt.Before(dayAgo):
+				_, ok := timeCategories[dayAgo]
+				if !ok {
+					timeCategories[dayAgo] = true
+					fmt.Println("### Older than a day")
+				}
+			default:
+				_, ok := timeCategories[now]
+				if !ok {
+					timeCategories[now] = true
+					fmt.Println("### Todays events")
+				}
+			}
+		}
 		fmt.Printf("#%-5d %9.9s %.55s\n",
 			item.Number, item.User.Login, item.Title)
 	}
+
 }
 
 //!-
