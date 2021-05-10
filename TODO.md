@@ -13,3 +13,5 @@ Ideas to use.
 * Storing/loading index.
 * Rebuild index.
 * Fuzzy search.
+
+4. ch5 ex 5.10-5.14 graphs traversal.

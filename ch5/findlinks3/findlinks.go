@@ -10,8 +10,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
-	"gopl.io/ch5/links"
+	"gopl.io/denis-zakharov/ch5/links"
 )
 
 //!+breadthFirst
@@ -37,6 +38,10 @@ func breadthFirst(f func(item string) []string, worklist []string) {
 //!+crawl
 func crawl(url string) []string {
 	fmt.Println(url)
+	if strings.HasSuffix(url, ".zip") || strings.HasSuffix(url, ".tar.gz") ||
+		strings.HasSuffix(url, ".msi") || strings.HasSuffix(url, ".pkg") {
+		return make([]string, 0)
+	}
 	list, err := links.Extract(url)
 	if err != nil {
 		log.Print(err)
