@@ -47,13 +47,19 @@ func (s *IntSet) Add(x int) {
 	s.words[word] |= 1 << bit
 }
 
+// AddAll adds variate number of integers to the set.
+func (s *IntSet) AddAll(xs ...int) {
+	for x := range xs {
+		s.Add(x)
+	}
+}
+
 // Remove removes x from the set.
 func (s *IntSet) Remove(x int) {
 	word, bit := x/64, uint(x%64)
 	if word < len(s.words) {
 		s.words[word] &^= 1 << bit
 	}
-
 }
 
 // Removes all elements from the set.
@@ -73,6 +79,38 @@ func (s *IntSet) UnionWith(t *IntSet) {
 	for i, tword := range t.words {
 		if i < len(s.words) {
 			s.words[i] |= tword
+		} else {
+			s.words = append(s.words, tword)
+		}
+	}
+}
+
+// IntersectWith sets s to the intersection of s and t.
+func (s *IntSet) IntersectWith(t *IntSet) {
+	for i, tword := range t.words {
+		if i < len(s.words) {
+			s.words[i] &= tword
+		}
+	}
+	if len(t.words) < len(s.words) {
+		s.words = s.words[:len(t.words)]
+	}
+}
+
+// DifferenceWith sets s to the difference of s and t.
+func (s *IntSet) DifferenceWith(t *IntSet) {
+	for i, sword := range s.words {
+		if i < len(t.words) {
+			s.words[i] = sword &^ t.words[i]
+		}
+	}
+}
+
+// SymmetricDifference sets s to the symmetric difference of s and t.
+func (s *IntSet) SymmetricDifference(t *IntSet) {
+	for i, tword := range t.words {
+		if i < len(s.words) {
+			s.words[i] ^= tword
 		} else {
 			s.words = append(s.words, tword)
 		}

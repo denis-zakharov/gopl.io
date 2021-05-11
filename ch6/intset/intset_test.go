@@ -130,3 +130,122 @@ func TestCopy(t *testing.T) {
 		t.Errorf("Copy non-empty: %v", &y)
 	}
 }
+
+func TestIntersectWith(t *testing.T) {
+	var x IntSet
+	var z IntSet
+	z.Add(1)
+	x.IntersectWith(&z)
+	if x.Len() != 0 {
+		t.Errorf("empty intersectWith non-empty")
+	}
+
+	x.Add(1)
+	x.Add(144)
+	x.Add(9)
+	x.Add(42)
+
+	var y IntSet
+
+	x.IntersectWith(&y)
+	if x.Len() != 0 {
+		t.Errorf("Intersect with an empty set")
+	}
+
+	x.Add(1)
+	x.Add(144)
+	x.Add(9)
+	x.Add(42)
+	y.Add(1)
+	y.Add(2)
+	x.IntersectWith(&y)
+
+	if x.String() != "{1}" {
+		t.Errorf("one")
+	}
+
+	x.Add(144)
+	x.Add(9)
+	x.Add(42)
+	x.Add(2)
+	x.IntersectWith(&y)
+
+	if x.String() != "{1 2}" {
+		t.Errorf("two")
+	}
+}
+
+func TestDifferenceWith(t *testing.T) {
+	var x IntSet
+	var z IntSet
+	z.Add(1)
+	x.DifferenceWith(&z)
+	if x.Len() != 0 {
+		t.Errorf("empty differenceWith non-empty")
+	}
+
+	x.Add(1)
+	x.Add(144)
+	x.Add(9)
+	x.Add(42)
+
+	var y IntSet
+
+	x.DifferenceWith(&y)
+	if x.Len() != 4 {
+		t.Errorf("Diff with an empty set")
+	}
+
+	y.Add(1)
+	y.Add(2)
+	x.DifferenceWith(&y)
+
+	if x.String() != "{9 42 144}" {
+		t.Error("{1 9 42 144} \\ {1 2}")
+	}
+
+	y.Add(144)
+	y.Add(9)
+	y.Add(42)
+	x.DifferenceWith(&y)
+
+	if x.String() != "{}" {
+		t.Error("{9 42 144} \\ {1 2 9 42 144}")
+	}
+}
+
+func TestSymmetricDifference(t *testing.T) {
+	var x IntSet
+	var z IntSet
+	z.Add(1)
+	x.SymmetricDifference(&z)
+	if x.String() != "{1}" {
+		t.Errorf("empty symmetric diff {1}")
+	}
+
+	x.Add(144)
+
+	var y IntSet
+
+	x.SymmetricDifference(&y)
+	if x.String() != "{1 144}" {
+		t.Errorf("{1 144} with an empty set")
+	}
+
+	y.Add(1)
+	y.Add(2)
+	x.SymmetricDifference(&y)
+
+	if x.String() != "{2 144}" {
+		t.Error("{1 144} symm diff {1 2}")
+	}
+
+	y.Add(144)
+	y.Add(9)
+	y.Add(42)
+	x.SymmetricDifference(&y)
+
+	if x.String() != "{1 9 42}" {
+		t.Error("{2 144} \\ {1 2 9 42 144}")
+	}
+}
