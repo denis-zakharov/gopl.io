@@ -3,7 +3,10 @@
 
 package intset
 
-import "fmt"
+import (
+	"fmt"
+	"testing"
+)
 
 func Example_one() {
 	//!+main
@@ -47,4 +50,83 @@ func Example_two() {
 	// {1 9 42 144}
 	// {1 9 42 144}
 	// {[4398046511618 0 65536]}
+}
+
+func TestLen(t *testing.T) {
+	var x IntSet
+	if x.Len() != 0 {
+		t.Error("Empty")
+	}
+	x.Add(1)
+	x.Add(144)
+	x.Add(9)
+	x.Add(42)
+	if x.Len() != 4 {
+		t.Error("4 elements")
+	}
+}
+
+func TestRemove(t *testing.T) {
+	var x IntSet
+	if x.String() != "{}" {
+		t.Error("Empty")
+	}
+	x.Add(1)
+	x.Add(144)
+	x.Add(9)
+	x.Add(42)
+
+	if x.String() != "{1 9 42 144}" {
+		t.Error("Added")
+	}
+
+	x.Remove(240)
+	if x.String() != "{1 9 42 144}" {
+		t.Error("Remove non-existing")
+	}
+	x.Remove(42)
+	if x.String() != "{1 9 144}" {
+		t.Error("Remove existing")
+	}
+}
+
+func TestClear(t *testing.T) {
+	var x IntSet
+
+	x.Clear()
+	if x.Len() != 0 {
+		t.Error("Clear empty")
+	}
+
+	x.Add(1)
+	x.Add(144)
+	x.Add(9)
+	x.Add(42)
+
+	x.Clear()
+	if x.Len() != 0 {
+		t.Error("Clear non-empty")
+	}
+}
+
+func TestCopy(t *testing.T) {
+	var x IntSet
+	var y *IntSet
+
+	y = x.Copy()
+	if len(y.words) != 0 && y.Len() != 0 {
+		t.Error("Copy empty")
+	}
+
+	x.Add(1)
+	x.Add(144)
+	x.Add(9)
+	x.Add(42)
+
+	// fmt.Println(&x)
+
+	y = x.Copy()
+	if y.String() != "{1 9 42 144}" {
+		t.Errorf("Copy non-empty: %v", &y)
+	}
 }

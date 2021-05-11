@@ -9,6 +9,8 @@ package intset
 import (
 	"bytes"
 	"fmt"
+
+	"gopl.io/denis-zakharov/ch2/popcount"
 )
 
 //!+intset
@@ -17,6 +19,17 @@ import (
 // Its zero value represents the empty set.
 type IntSet struct {
 	words []uint64
+}
+
+// Len returns a number of elements is in the set.
+func (s *IntSet) Len() int {
+	res := 0
+	for _, tword := range s.words {
+		if tword != 0 {
+			res += popcount.PopCount4(tword)
+		}
+	}
+	return res
 }
 
 // Has reports whether the set contains the non-negative value x.
@@ -32,6 +45,27 @@ func (s *IntSet) Add(x int) {
 		s.words = append(s.words, 0)
 	}
 	s.words[word] |= 1 << bit
+}
+
+// Remove removes x from the set.
+func (s *IntSet) Remove(x int) {
+	word, bit := x/64, uint(x%64)
+	if word < len(s.words) {
+		s.words[word] &^= 1 << bit
+	}
+
+}
+
+// Removes all elements from the set.
+func (s *IntSet) Clear() {
+	s.words = nil
+}
+
+// Copy returns a copy of the set.
+func (s *IntSet) Copy() *IntSet {
+	var newWords = make([]uint64, len(s.words))
+	copy(newWords, s.words)
+	return &IntSet{newWords}
 }
 
 // UnionWith sets s to the union of s and t.
