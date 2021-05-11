@@ -249,3 +249,13 @@ func TestSymmetricDifference(t *testing.T) {
 		t.Error("{2 144} \\ {1 2 9 42 144}")
 	}
 }
+
+func TestElems(t *testing.T) {
+	var x IntSet
+	x.Add(1)
+	x.Add(78)
+	x.Add(144)
+	if fmt.Sprintf("%v", x.Elems()) != "[1 78 144]" {
+		t.Errorf("Wrong! %v", &x)
+	}
+}
