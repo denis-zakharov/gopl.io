@@ -9,16 +9,32 @@ package intset
 import (
 	"bytes"
 	"fmt"
-
-	"gopl.io/denis-zakharov/ch2/popcount"
 )
+
+/* 32 or 64: platform dependnent
+Switch on all bits, right shift to 63 gives:
+0b1 on 64-bit plaforms or
+0b0 on 32-bit platforms.
+32<<0 does nothing.
+32<<1 is the same as 32*2.
+*/
+const uintSize = 32 << (^uint(0) >> 63)
+
+func PopCount(x uint) int {
+	res := 0
+	for x != 0 {
+		x &= x - 1
+		res += 1
+	}
+	return res
+}
 
 //!+intset
 
 // An IntSet is a set of small non-negative integers.
 // Its zero value represents the empty set.
 type IntSet struct {
-	words []uint64
+	words []uint
 }
 
 // Len returns a number of elements is in the set.
@@ -26,7 +42,7 @@ func (s *IntSet) Len() int {
 	res := 0
 	for _, tword := range s.words {
 		if tword != 0 {
-			res += popcount.PopCount4(tword)
+			res += PopCount(tword)
 		}
 	}
 	return res
@@ -34,13 +50,13 @@ func (s *IntSet) Len() int {
 
 // Has reports whether the set contains the non-negative value x.
 func (s *IntSet) Has(x int) bool {
-	word, bit := x/64, uint(x%64)
+	word, bit := x/uintSize, uint(x%uintSize)
 	return word < len(s.words) && s.words[word]&(1<<bit) != 0
 }
 
 // Add adds the non-negative value x to the set.
 func (s *IntSet) Add(x int) {
-	word, bit := x/64, uint(x%64)
+	word, bit := x/uintSize, uint(x%uintSize)
 	for word >= len(s.words) {
 		s.words = append(s.words, 0)
 	}
@@ -56,7 +72,7 @@ func (s *IntSet) AddAll(xs ...int) {
 
 // Remove removes x from the set.
 func (s *IntSet) Remove(x int) {
-	word, bit := x/64, uint(x%64)
+	word, bit := x/uintSize, uint(x%uintSize)
 	if word < len(s.words) {
 		s.words[word] &^= 1 << bit
 	}
@@ -69,7 +85,7 @@ func (s *IntSet) Clear() {
 
 // Copy returns a copy of the set.
 func (s *IntSet) Copy() *IntSet {
-	var newWords = make([]uint64, len(s.words))
+	var newWords = make([]uint, len(s.words))
 	copy(newWords, s.words)
 	return &IntSet{newWords}
 }
@@ -123,9 +139,9 @@ func (s *IntSet) Elems() []int {
 		if word == 0 {
 			continue
 		}
-		for j := 0; j < 64; j++ {
+		for j := 0; j < uintSize; j++ {
 			if word&(1<<uint(j)) != 0 {
-				iterator = append(iterator, 64*i+j)
+				iterator = append(iterator, uintSize*i+j)
 			}
 		}
 	}
@@ -144,12 +160,12 @@ func (s *IntSet) String() string {
 		if word == 0 {
 			continue
 		}
-		for j := 0; j < 64; j++ {
+		for j := 0; j < uintSize; j++ {
 			if word&(1<<uint(j)) != 0 {
 				if buf.Len() > len("{") {
 					buf.WriteByte(' ')
 				}
-				fmt.Fprintf(&buf, "%d", 64*i+j)
+				fmt.Fprintf(&buf, "%d", uintSize*i+j)
 			}
 		}
 	}
