@@ -9,6 +9,16 @@ func CreateIntMapSet() IntMapSet {
 	return IntMapSet{make(map[int]bool)}
 }
 
+func (s *IntMapSet) Elems() []int {
+	res := make([]int, len(s.elems))
+	i := 0
+	for k := range s.elems {
+		res[i] = k
+		i++
+	}
+	return res
+}
+
 func (s *IntMapSet) Add(x int) {
 	s.elems[x] = true
 }
@@ -38,15 +48,15 @@ func (s *IntMapSet) DifferenceWith(t *IntMapSet) {
 }
 
 func (s *IntMapSet) SymmetricDifference(t *IntMapSet) {
-	intersection := new(IntMapSet)
+	intersection := CreateIntMapSet()
 	for k := range s.elems {
 		_, ok := t.elems[k]
 		if ok {
 			intersection.Add(k)
 		}
 	}
-	s.DifferenceWith(intersection)
-	t.DifferenceWith(intersection)
+	s.DifferenceWith(&intersection)
+	t.DifferenceWith(&intersection)
 	s.UnionWith(t)
 }
 

@@ -134,7 +134,7 @@ func (s *IntSet) SymmetricDifference(t *IntSet) {
 }
 
 func (s *IntSet) Elems() []int {
-	iterator := make([]int, 0, len(s.words))
+	iterator := make([]int, 0)
 	for i, word := range s.words {
 		if word == 0 {
 			continue
