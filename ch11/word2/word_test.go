@@ -6,12 +6,13 @@ package word
 import (
 	"fmt"
 	"math/rand"
+	"os"
+	"testing"
 	"time"
+	"unicode"
 )
 
 //!+bench
-
-import "testing"
 
 //!-bench
 
@@ -86,6 +87,36 @@ func randomPalindrome(rng *rand.Rand) string {
 	return string(runes)
 }
 
+func randomNonPalindrome(rng *rand.Rand) string {
+	letterGen := func() rune {
+		// random letter rune up to '\u0999'
+		r := rune(rng.Intn(0x1000))
+		for !unicode.IsLetter(r) {
+			r = rune(rng.Intn(0x1000))
+		}
+		return r
+	}
+
+	n := 2 + rng.Intn(24) // random length from 2 to 25
+	runes := make([]rune, n)
+	for i := 0; i < n; i++ {
+		r := letterGen()
+		runes[i] = r
+	}
+
+	i := rng.Intn((n + 1) / 2) // random index to check palindrom invariant
+	i1 := n - 1 - i
+	if i == i1 {
+		i--
+		i1++
+	}
+	for unicode.ToLower(runes[i]) == unicode.ToLower(runes[i1]) {
+		r := letterGen()
+		runes[i] = r
+	}
+	return string(runes)
+}
+
 func TestRandomPalindromes(t *testing.T) {
 	// Initialize a pseudo-random number generator.
 	seed := time.Now().UTC().UnixNano()
@@ -100,9 +131,22 @@ func TestRandomPalindromes(t *testing.T) {
 	}
 }
 
+func TestRandomNonPalindromes(t *testing.T) {
+	// Initialize a pseudo-random number generator.
+	seed := time.Now().UTC().UnixNano()
+	t.Logf("Random seed: %d", seed)
+	rng := rand.New(rand.NewSource(seed))
+
+	for i := 0; i < 1000; i++ {
+		p := randomNonPalindrome(rng)
+		if IsPalindrome(p) {
+			t.Errorf("IsPalindrome(%q) = true", p)
+		}
+	}
+}
+
 //!-random
 
-/*
 // Answer for Exercicse 11.1: Modify randomPalindrome to exercise
 // IsPalindrome's handling of punctuation and spaces.
 
@@ -124,7 +168,7 @@ func randomNoisyPalindrome(rng *rand.Rand) string {
 				fmt.Printf("cap? %c %c\n", r1, r)
 			}
 		}
-		runes[n-1-i] = r
+		runes[n-1-i] = r1
 	}
 	return "?" + string(runes) + "!"
 }
@@ -136,13 +180,14 @@ func TestRandomNoisyPalindromes(t *testing.T) {
 	rng := rand.New(rand.NewSource(seed))
 
 	n := 0
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 10000; i++ {
 		p := randomNoisyPalindrome(rng)
 		if !IsPalindrome(p) {
 			t.Errorf("IsNoisyPalindrome(%q) = false", p)
 			n++
 		}
 	}
-	fmt.Fprintf(os.Stderr, "fail = %d\n", n)
+	if n > 0 {
+		fmt.Fprintf(os.Stderr, "fail = %d\n", n)
+	}
 }
-*/
