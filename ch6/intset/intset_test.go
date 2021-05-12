@@ -53,209 +53,205 @@ func Example_two() {
 }
 
 func TestLen(t *testing.T) {
-	var x IntSet
-	if x.Len() != 0 {
-		t.Error("Empty")
+	var tests = []struct {
+		input []int
+		want  int
+	}{
+		{[]int{}, 0},
+		{[]int{1}, 1},
+		{[]int{1, 9}, 2},
+		{[]int{0, 10, 13, 145}, 4},
 	}
-	x.Add(1)
-	x.Add(144)
-	x.Add(9)
-	x.Add(42)
-	if x.Len() != 4 {
-		t.Error("4 elements")
+
+	for _, test := range tests {
+		var x IntSet
+		for _, i := range test.input {
+			x.Add(i)
+		}
+		if got := x.Len(); got != test.want {
+			t.Errorf("%v.Len() == %d, wanted %d", &x, got, test.want)
+		}
 	}
 }
 
 func TestRemove(t *testing.T) {
-	var x IntSet
-	if x.String() != "{}" {
-		t.Error("Empty")
+	var tests = []struct {
+		input  []int
+		remove int
+		want   string
+	}{
+		{[]int{0, 10, 13, 145}, 4, "{0 10 13 145}"},
+		{[]int{0, 10, 13, 145}, 13, "{0 10 145}"},
+		{[]int{0, 10, 145}, 145, "{0 10}"},
+		{[]int{0, 10}, 0, "{10}"},
+		{[]int{10}, 0, "{10}"},
+		{[]int{10}, 10, "{}"},
+		{[]int{}, 10, "{}"},
 	}
-	x.Add(1)
-	x.Add(144)
-	x.Add(9)
-	x.Add(42)
 
-	if x.String() != "{1 9 42 144}" {
-		t.Error("Added")
-	}
-
-	x.Remove(240)
-	if x.String() != "{1 9 42 144}" {
-		t.Error("Remove non-existing")
-	}
-	x.Remove(42)
-	if x.String() != "{1 9 144}" {
-		t.Error("Remove existing")
+	for _, test := range tests {
+		var x IntSet
+		for _, i := range test.input {
+			x.Add(i)
+		}
+		x.Remove(test.remove)
+		if got := x.String(); got != test.want {
+			t.Errorf("%v.Remove(%d) == %s, wanted %s", &x, test.remove, got, test.want)
+		}
 	}
 }
 
 func TestClear(t *testing.T) {
-	var x IntSet
-
-	x.Clear()
-	if x.Len() != 0 {
-		t.Error("Clear empty")
+	var tests = []struct {
+		input []int
+	}{
+		{[]int{0, 10, 13, 145}},
+		{[]int{0, 10, 145}},
+		{[]int{0, 10}},
+		{[]int{10}},
+		{[]int{}},
 	}
+	var want = "{}"
 
-	x.Add(1)
-	x.Add(144)
-	x.Add(9)
-	x.Add(42)
-
-	x.Clear()
-	if x.Len() != 0 {
-		t.Error("Clear non-empty")
+	for _, test := range tests {
+		var x IntSet
+		for _, i := range test.input {
+			x.Add(i)
+		}
+		x.Clear()
+		if got := x.String(); got != want {
+			t.Errorf("%v.Clear() == %s, wanted %s", &x, got, want)
+		}
 	}
 }
 
 func TestCopy(t *testing.T) {
-	var x IntSet
-	var y *IntSet
-
-	y = x.Copy()
-	if len(y.words) != 0 && y.Len() != 0 {
-		t.Error("Copy empty")
+	var tests = []struct {
+		input []int
+		want  string
+	}{
+		{[]int{0, 10, 13, 145}, "{0 10 13 145}"},
+		{[]int{0, 10, 145}, "{0 10 145}"},
+		{[]int{0, 10}, "{0 10}"},
+		{[]int{10}, "{10}"},
+		{[]int{0}, "{0}"},
+		{[]int{}, "{}"},
 	}
 
-	x.Add(1)
-	x.Add(144)
-	x.Add(9)
-	x.Add(42)
-
-	// fmt.Println(&x)
-
-	y = x.Copy()
-	if y.String() != "{1 9 42 144}" {
-		t.Errorf("Copy non-empty: %v", &y)
+	for _, test := range tests {
+		var x IntSet
+		for _, i := range test.input {
+			x.Add(i)
+		}
+		yptr := x.Copy()
+		if got := yptr.String(); got != test.want {
+			t.Errorf("%v.Copy() == %s, wanted %s", &x, got, test.want)
+		}
 	}
 }
 
 func TestIntersectWith(t *testing.T) {
-	var x IntSet
-	var z IntSet
-	z.Add(1)
-	x.IntersectWith(&z)
-	if x.Len() != 0 {
-		t.Errorf("empty intersectWith non-empty")
+	var tests = []struct {
+		self  []int
+		other []int
+		want  string
+	}{
+		{[]int{}, []int{}, "{}"},
+		{[]int{}, []int{1}, "{}"},
+		{[]int{1}, []int{}, "{}"},
+		{[]int{1, 9, 42, 144}, []int{9, 144}, "{9 144}"},
+		{[]int{1, 9, 42, 144}, []int{0, 4, 9, 42, 100}, "{9 42}"},
 	}
 
-	x.Add(1)
-	x.Add(144)
-	x.Add(9)
-	x.Add(42)
-
-	var y IntSet
-
-	x.IntersectWith(&y)
-	if x.Len() != 0 {
-		t.Errorf("Intersect with an empty set")
-	}
-
-	x.Add(1)
-	x.Add(144)
-	x.Add(9)
-	x.Add(42)
-	y.Add(1)
-	y.Add(2)
-	x.IntersectWith(&y)
-
-	if x.String() != "{1}" {
-		t.Errorf("one")
-	}
-
-	x.Add(144)
-	x.Add(9)
-	x.Add(42)
-	x.Add(2)
-	x.IntersectWith(&y)
-
-	if x.String() != "{1 2}" {
-		t.Errorf("two")
+	for _, test := range tests {
+		var x, y IntSet
+		for _, v := range test.self {
+			x.Add(v)
+		}
+		for _, v := range test.other {
+			y.Add(v)
+		}
+		x.IntersectWith(&y)
+		if got := x.String(); got != test.want {
+			t.Errorf("%v.IntersectWith(%v) == %s, wanted %s", &x, &y, got, test.want)
+		}
 	}
 }
 
 func TestDifferenceWith(t *testing.T) {
-	var x IntSet
-	var z IntSet
-	z.Add(1)
-	x.DifferenceWith(&z)
-	if x.Len() != 0 {
-		t.Errorf("empty differenceWith non-empty")
+	var tests = []struct {
+		self  []int
+		other []int
+		want  string
+	}{
+		{[]int{}, []int{}, "{}"},
+		{[]int{}, []int{1}, "{}"},
+		{[]int{1}, []int{}, "{1}"},
+		{[]int{1, 9, 42, 144}, []int{9, 144}, "{1 42}"},
+		{[]int{1, 9, 42, 144}, []int{0, 4, 9, 42, 100}, "{1 144}"},
 	}
 
-	x.Add(1)
-	x.Add(144)
-	x.Add(9)
-	x.Add(42)
-
-	var y IntSet
-
-	x.DifferenceWith(&y)
-	if x.Len() != 4 {
-		t.Errorf("Diff with an empty set")
-	}
-
-	y.Add(1)
-	y.Add(2)
-	x.DifferenceWith(&y)
-
-	if x.String() != "{9 42 144}" {
-		t.Error("{1 9 42 144} \\ {1 2}")
-	}
-
-	y.Add(144)
-	y.Add(9)
-	y.Add(42)
-	x.DifferenceWith(&y)
-
-	if x.String() != "{}" {
-		t.Error("{9 42 144} \\ {1 2 9 42 144}")
+	for _, test := range tests {
+		var x, y IntSet
+		for _, v := range test.self {
+			x.Add(v)
+		}
+		for _, v := range test.other {
+			y.Add(v)
+		}
+		x.DifferenceWith(&y)
+		if got := x.String(); got != test.want {
+			t.Errorf("%v.DifferenceWith(%v) == %s, wanted %s", &x, &y, got, test.want)
+		}
 	}
 }
 
 func TestSymmetricDifference(t *testing.T) {
-	var x IntSet
-	var z IntSet
-	z.Add(1)
-	x.SymmetricDifference(&z)
-	if x.String() != "{1}" {
-		t.Errorf("empty symmetric diff {1}")
+	var tests = []struct {
+		self  []int
+		other []int
+		want  string
+	}{
+		{[]int{}, []int{}, "{}"},
+		{[]int{}, []int{1}, "{1}"},
+		{[]int{1}, []int{}, "{1}"},
+		{[]int{1, 9, 42, 144}, []int{9, 144}, "{1 42}"},
+		{[]int{1, 9, 42, 144}, []int{0, 4, 9, 42, 100}, "{0 1 4 100 144}"},
 	}
 
-	x.Add(144)
-
-	var y IntSet
-
-	x.SymmetricDifference(&y)
-	if x.String() != "{1 144}" {
-		t.Errorf("{1 144} with an empty set")
-	}
-
-	y.Add(1)
-	y.Add(2)
-	x.SymmetricDifference(&y)
-
-	if x.String() != "{2 144}" {
-		t.Error("{1 144} symm diff {1 2}")
-	}
-
-	y.Add(144)
-	y.Add(9)
-	y.Add(42)
-	x.SymmetricDifference(&y)
-
-	if x.String() != "{1 9 42}" {
-		t.Error("{2 144} \\ {1 2 9 42 144}")
+	for _, test := range tests {
+		var x, y IntSet
+		for _, v := range test.self {
+			x.Add(v)
+		}
+		for _, v := range test.other {
+			y.Add(v)
+		}
+		x.SymmetricDifference(&y)
+		if got := x.String(); got != test.want {
+			t.Errorf("%v.SymmetricDifference(%v) == %s, wanted %s", &x, &y, got, test.want)
+		}
 	}
 }
 
 func TestElems(t *testing.T) {
-	var x IntSet
-	x.Add(1)
-	x.Add(78)
-	x.Add(144)
-	if fmt.Sprintf("%v", x.Elems()) != "[1 78 144]" {
-		t.Errorf("Wrong! %v", &x)
+	var tests = []struct {
+		input []int
+		want  string
+	}{
+		{[]int{}, "[]"},
+		{[]int{1}, "[1]"},
+		{[]int{1, 999}, "[1 999]"},
+		{[]int{1, 9, 42, 144}, "[1 9 42 144]"},
+	}
+
+	for _, test := range tests {
+		var x IntSet
+		for _, v := range test.input {
+			x.Add(v)
+		}
+		if got := fmt.Sprintf("%v", x.Elems()); got != test.want {
+			t.Errorf("%v.Elems() == %s, wanted %s", &x, got, test.want)
+		}
 	}
 }
